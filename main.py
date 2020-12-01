@@ -1,44 +1,13 @@
 import argparse
-import time
+# import time
 import torch
-import torch.nn.functional as F
+# import torch.nn.functional as F
 from dgl import node_subgraph, remove_self_loop, add_self_loop
 from dgl.data import register_data_args
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset
 from models import GCN, MLP
 import copy
-
-
-def weights_zero(model):
-    for p in model.parameters():
-        if p.data is not None:
-            p.data.detach_()
-            p.data.zero_()
-
-
-def setup_seed(seed):
-    import numpy as np
-    import random
-    from torch.backends import cudnn
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.cuda.manual_seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    cudnn.deterministic = True
-
-
-def evaluate(model, g, features, labels, mask):
-    model.eval()
-    with torch.no_grad():
-        logits = model(g, features)
-        logits = logits[mask]
-        labels = labels[mask]
-        # _, indices = torch.max(logits, dim=1)
-        # correct = torch.sum(indices == labels)
-        pred = logits.argmax(dim=1)
-        correct = torch.sum(pred == labels)
-        return correct.item() * 1.0 / len(labels)
+from utils import setup_seed, evaluate, weights_zero
 
 
 def main(args):
@@ -110,19 +79,6 @@ def main(args):
         train_mask[i][0:60] = True
         val_mask[i][0:500] = True
         test_mask[i][0:1000] = True
-    # features = g.ndata['feat']
-    # labels = g.ndata['label']
-    # train_mask = g.ndata['train_mask']
-    # val_mask = g.ndata['val_mask']
-    # test_mask = g.ndata['test_mask']
-    # in_feats = features.shape[1]
-    # n_classes = data.num_classes
-    # n_edges = g.number_of_edges()
-
-    # num_classes = labels.shape[0]
-    # num = in_feats = features.shape[0]
-    # features = features[0:int(num/3), :]
-    # in_feats = int(in_feats/3)
 
     # print("""----Data statistics------'
     #   #Edges %d
@@ -166,6 +122,8 @@ def main(args):
             n_classes[i],
             args.n_layers,
             args.dropout))
+    clients = [GCN(in_feats[k],  args.n_hidden,  n_classes[k],
+                   args.n_layers,  args.dropout) for k in range(3)]
     # model = MLP()
     if cuda:
         gl.cuda()
@@ -193,10 +151,9 @@ def main(args):
                 optimizer[i] = torch.optim.Adam(model[i].parameters(),
                                                 lr=args.lr,
                                                 weight_decay=args.weight_decay)
-
                 model[i].train()
-                if epoch >= 3:
-                    t0 = time.time()
+                # if epoch >= 3:
+                #     t0 = time.time()
 
                 # forward
                 logits = model[i](sg[i], features[i])
@@ -208,8 +165,8 @@ def main(args):
                 loss.backward()
                 optimizer[i].step()
 
-                if epoch >= 3:
-                    dur.append(time.time() - t0)
+                # if epoch >= 3:
+                #     dur.append(time.time() - t0)
 
                 acc = evaluate(model[i], sg[i], features[i],
                                labels[i], val_mask[i])
@@ -243,6 +200,10 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GCN')
     register_data_args(parser)
+    parser.add_argument("--in_feats", type=float, default=500,
+                        help="dropout probability")
+    parser.add_argument("--n_classes", type=float, default=3,
+                        help="dropout probability")
     parser.add_argument("--dropout", type=float, default=0.5,
                         help="dropout probability")
     parser.add_argument("--gpu", type=int, default=0,
@@ -259,10 +220,7 @@ if __name__ == '__main__':
                         help="Weight for L2 loss")
     parser.add_argument("--self-loop", action='store_true',
                         help="graph self-loop (default=False)")
-    # parser.add_argument("--dataset", type=str, default='cora',
-    #                     help="dataset")
     parser.set_defaults(self_loop=False)
     args = parser.parse_args()
     print(args)
-
     main(args)
