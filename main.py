@@ -1,17 +1,11 @@
 import argparse
 import time
-import numpy as np
-# import networkx as nx
 import torch
-# import torch.nn as nn
 import torch.nn.functional as F
-import dgl
+from dgl import node_subgraph, remove_self_loop, add_self_loop
 from dgl.data import register_data_args
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset
-import numpy as np
-import random
-from torch.backends import cudnn
-from gcn import GCN, MLP
+from models import GCN, MLP
 import copy
 #from gcn_mp import GCN
 #from gcn_spmv import GCN
@@ -25,6 +19,9 @@ def weights_zero(model):
 
 
 def setup_seed(seed):
+    import numpy as np
+    import random
+    from torch.backends import cudnn
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.cuda.manual_seed(seed)
@@ -61,20 +58,20 @@ def main(args):
 
     g = data[0]
 
-    sg1 = dgl.node_subgraph(g, range(0, 6000))
-    sg2 = dgl.node_subgraph(g, range(6000, 12000))
-    sg3 = dgl.node_subgraph(g, range(12000, 18000))
-    sg4 = dgl.node_subgraph(g, range(18000, 19717))
+    sg1 = node_subgraph(g, range(0, 6000))
+    sg2 = node_subgraph(g, range(6000, 12000))
+    sg3 = node_subgraph(g, range(12000, 18000))
+    sg4 = node_subgraph(g, range(18000, 19717))
     sg = [sg1, sg2, sg3, sg4]
 
-    cg = dgl.node_subgraph(g, range(0, 18000))
-    clabels = cg.ndata['label']
-    c1 = torch.where(clabels == 0)
-    c2 = torch.where(clabels == 1)
-    c3 = torch.where(clabels == 2)
-    cg1 = dgl.node_subgraph(cg, c1)
-    cg2 = dgl.node_subgraph(cg, c2)
-    cg3 = dgl.node_subgraph(cg, c3)
+    # cg = node_subgraph(g, range(0, 18000))
+    # clabels = cg.ndata['label']
+    # c1 = torch.where(clabels == 0)
+    # c2 = torch.where(clabels == 1)
+    # c3 = torch.where(clabels == 2)
+    # cg1 = node_subgraph(cg, c1)
+    # cg2 = node_subgraph(cg, c2)
+    # cg3 = node_subgraph(cg, c3)
 
     if args.gpu < 0:
         cuda = False
@@ -90,8 +87,8 @@ def main(args):
     allval_mask = g.ndata['val_mask']
     alltest_mask = g.ndata['test_mask']
     allin_feats = allfeatures.shape[1]
-    alln_classes = data.num_labels
-    alln_edges = data.graph.number_of_edges()
+    alln_classes = data.num_classes
+    alln_edges = g.number_of_edges()
 
     features = []
     labels = []
@@ -108,7 +105,7 @@ def main(args):
         val_mask.append(sg[i].ndata['val_mask'])
         test_mask.append(sg[i].ndata['test_mask'])
         in_feats.append(features[i].shape[1])
-        n_classes.append(data.num_labels)
+        n_classes.append(data.num_classes)
         n_edges.append(sg[i].number_of_edges())
 
     for i in range(3):
@@ -121,10 +118,10 @@ def main(args):
     # val_mask = g.ndata['val_mask']
     # test_mask = g.ndata['test_mask']
     # in_feats = features.shape[1]
-    # n_classes = data.num_labels
-    # n_edges = data.graph.number_of_edges()
+    # n_classes = data.num_classes
+    # n_edges = g.number_of_edges()
 
-    # num_labels = labels.shape[0]
+    # num_classes = labels.shape[0]
     # num = in_feats = features.shape[0]
     # features = features[0:int(num/3), :]
     # in_feats = int(in_feats/3)
@@ -144,8 +141,8 @@ def main(args):
     args.self_loop = True
     for i in range(4):
         if args.self_loop:
-            sg[i] = dgl.remove_self_loop(sg[i])
-            sg[i] = dgl.add_self_loop(sg[i])
+            sg[i] = remove_self_loop(sg[i])
+            sg[i] = add_self_loop(sg[i])
         n_edges[i] = sg[i].number_of_edges()
 
     # normalization
@@ -163,7 +160,6 @@ def main(args):
         args.n_hidden,
         n_classes[0],
         args.n_layers,
-        F.relu,
         args.dropout)
     for i in range(3):
         model.append(GCN(
@@ -171,7 +167,6 @@ def main(args):
             args.n_hidden,
             n_classes[i],
             args.n_layers,
-            F.relu,
             args.dropout))
     # model = MLP()
     if cuda:
@@ -188,7 +183,7 @@ def main(args):
                                           weight_decay=args.weight_decay))
 
     # initialize graph
-    E = 20
+    E = 3
     dur = []
     for epoch in range(int(args.n_epochs/E)):
         for k in range(E):
