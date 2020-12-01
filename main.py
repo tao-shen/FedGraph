@@ -7,8 +7,6 @@ from dgl.data import register_data_args
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset
 from models import GCN, MLP
 import copy
-#from gcn_mp import GCN
-#from gcn_spmv import GCN
 
 
 def weights_zero(model):

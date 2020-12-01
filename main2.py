@@ -11,7 +11,7 @@ from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset
 import numpy as np
 import random
 from torch.backends import cudnn
-from gcn import GCN, MLP
+from models import GCN, MLP
 #from gcn_mp import GCN
 #from gcn_spmv import GCN
 
