@@ -4,7 +4,7 @@ from dgl import node_subgraph, remove_self_loop, add_self_loop
 
 
 def data_load(args):
-    args.dataset = 'pubmed'
+    # args.dataset = 'pubmed'
     # load and preprocess dataset
     if args.dataset == 'cora':
         data = CoraGraphDataset()
