@@ -16,7 +16,7 @@ clients = [Client(k, graphs[k], args) for k in range(args.num_clients)]
 new_client = Client(-1, graphs[-1], args)
 # FLearning
 for _ in range(int(args.n_epochs/args.E)):
-    for k in range(3):
+    for k in range(len(clients)):
         # Fork
         clients[k].fork(server)
         # Local_update
@@ -24,7 +24,7 @@ for _ in range(int(args.n_epochs/args.E)):
     # Merge
     server.merge(clients)
 # Evaluate
-for k in range(3):
+for k in range(len(clients)):
     acc = evaluate(clients[k].model, clients[k], mask='test')
     print("Client{}: {:.2%}".format(clients[k].id, acc))
 acc = evaluate(server.model, server)

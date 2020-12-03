@@ -23,7 +23,6 @@ class Client(object):
     def local_update(self):
         for E in range(self.args.E):
             train(self)
-            # evaluate(self)
 
 
 class Server(object):
