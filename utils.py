@@ -1,10 +1,12 @@
 import torch
 from models import GCN
 
+loss_fcn = torch.nn.CrossEntropyLoss()
+
 
 def init_model(args):
     return GCN(args.in_feats, args.n_hidden,
-               args.n_classes, args.n_layers, args.dropout)
+               args.n_classes, args.n_layers, args.dropout).to(args.device)
 
 
 def init_optimizer(model, args):
@@ -23,20 +25,46 @@ def setup_seed(seed):
     import numpy as np
     import random
     from torch.backends import cudnn
+    import dgl
+    dgl.seed(seed)
+    dgl.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.cuda.manual_seed(seed)
+    # torch.cuda.seed_all()
     np.random.seed(seed)
     random.seed(seed)
     cudnn.deterministic = True
+    cudnn.benchmark = False
 
 
-def evaluate(model, g, features, labels, mask):
+def train(client):
+    client.model.train()
+    logits = client.model(client.g, client.feats)
+    logits = logits[client.train_mask]
+    labels = client.labels[client.train_mask]
+    loss = loss_fcn(logits, labels)
+    client.optimizer.zero_grad()
+    loss.backward()
+    client.optimizer.step()
+
+
+def evaluate(model, target, mask='test'):
+    if mask == 'test':
+        mask = target.test_mask
+    elif mask == 'val':
+        mask = target.val_mask
+    elif mask == 'train':
+        mask = target.train_mask
+    else:
+        raise ValueError('Unknown mask {}'.format(mask))
     model.eval()
     with torch.no_grad():
-        logits = model(g, features)
+        logits = model(target.g, target.feats)
         logits = logits[mask]
-        labels = labels[mask]
+        labels = target.labels[mask]
         pred = logits.argmax(dim=1)
         correct = torch.sum(pred == labels)
         return correct.item() * 1.0 / len(labels)
+
+
