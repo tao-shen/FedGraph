@@ -5,6 +5,8 @@ def args():
     parser = ArgumentParser(default_config_files=['./config.yml'])
     parser.add_argument('--dataset', type=str, default='pubmed',
                         help='pubmed,cora,citeseer')
+    parser.add_argument('--split', type=int, default=4,
+                        help='pubmed,cora,citeseer')
     parser.add_argument('--device', type=str, default='cuda:0',
                         help='device: {cuda, cpu}')
     parser.add_argument("--E", type=int, default=3,

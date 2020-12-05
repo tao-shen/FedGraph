@@ -2,3 +2,5 @@ __pycache__/
 .vscode/
 saves/
 wandb/
+test.py
+plot.ipynb
