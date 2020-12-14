@@ -4,14 +4,14 @@ import torch.nn.functional as F
 
 
 class MLP(nn.Module):
-    def __init__(self, in_feats, n_hidden, n_classes, n_layers):
+    def __init__(self, in_feats, n_hidden, num_classes, n_layers, dropout):
         super(MLP, self).__init__()
         self.activation = F.relu
         self.layers = nn.ModuleList()
         self.layers.append(nn.Linear(in_feats, n_hidden))
         for i in range(n_layers - 1):
             self.layers.append(nn.Linear(n_hidden, n_hidden))
-        self.layers.append(nn.Linear(n_hidden, n_classes))
+        self.layers.append(nn.Linear(n_hidden, num_classes))
 
     def forward(self, h):
         for i, layer in enumerate(self.layers):
@@ -25,7 +25,7 @@ class GCN(nn.Module):
     def __init__(self,
                  in_feats,
                  n_hidden,
-                 n_classes,
+                 num_classes,
                  n_layers,
                  dropout):
         super(GCN, self).__init__()
@@ -40,13 +40,13 @@ class GCN(nn.Module):
             self.layers.append(
                 GraphConv(n_hidden, n_hidden, activation=self.activation))
         # output layer
-        self.layers.append(GraphConv(n_hidden, n_classes))
-        # self.dropout = nn.Dropout(p=dropout)
+        self.layers.append(GraphConv(n_hidden, num_classes))
+        self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, g, features):
         h = features
         for i, layer in enumerate(self.layers):
-            # if i != 0:
-            # h = self.dropout(h)
+            if i != 0:
+                h = self.dropout(h)
             h = layer(g, h)
         return h

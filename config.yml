@@ -1,2 +1,5 @@
-dataset: pubmed
+# dataset: cora
+dataset: citeseer
+# dataset: pubmed
 E: 3
+n-epochs: 200

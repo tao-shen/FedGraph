@@ -7,7 +7,7 @@ from plot import *
 
 # Initialize
 args = args()
-setup_seed(2020)
+# setup_seed(2020)
 recorder = {'train_loss': {'clients': [[] for k in range(args.split)], 'server': []},
             'val_loss': {'clients': [[] for k in range(args.split)], 'server': []},
             'test_loss': {'clients': [[] for k in range(args.split)], 'server': []},
@@ -22,7 +22,7 @@ server = Server(g, args)
 clients = [Client(k, graphs[k], args) for k in range(args.num_clients)]
 new_client = Client(-1, graphs[-1], args)
 # FLearning
-for _ in range(int(args.n_epochs/args.E)):
+for _ in range(int(args.n_epochs)):
     for k in range(len(clients)):
         # Fork
         clients[k].fork(server)
