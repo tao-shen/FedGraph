@@ -1,8 +1,13 @@
 seed: 2020
-# dataset: cora
-dataset: citeseer
+dataset: cora
+# dataset: citeseer
 # dataset: pubmed
 E: 3
-n-epochs: 200
+n_epochs: 200
 # model_type: GCN
 model_type: MLP
+# split_method: random_choice
+# split_method: community_detection
+split_method: b_min_cut
+# split_method: ub_min_cut
+

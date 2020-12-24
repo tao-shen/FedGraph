@@ -10,7 +10,7 @@ def fl_args(parser):
                         help="dropout probability")
     parser.add_argument("--num_clients", type=int, default=3,
                         help="dropout probability")
-    parser.add_argument("--n-epochs", type=int, default=200,
+    parser.add_argument("--n_epochs", type=int, default=200,
                         help="number of training epochs")
 
 def data_args(parser):
@@ -18,6 +18,7 @@ def data_args(parser):
     parser.add_argument("--in_feats", type=int)
     parser.add_argument("--num_classes", type=int)
     parser.add_argument('--split', type=int, default=4)
+    parser.add_argument('--split_method', type=str, default='b_min-cut')
     # parser.add_argument("--self-loop", type=bool, default=True)
 
 
@@ -47,4 +48,8 @@ def args():
     model_args(parser)
     optim_args(parser)
     args = parser.parse_args()
+    if args.split_method == 'b_min-cut' or 'random_choice':
+        pass
+    else:
+        args.n_epochs = int(args.n_epochs*2.5)
     return args

@@ -16,7 +16,9 @@ recorder = {'train_loss': {'clients': [[] for k in range(args.split)], 'server':
             'test_acc': {'clients': [[] for k in range(args.split)], 'server': []}}
 # Data load & split
 g = data_load(args)
+e = g.edges(form='eid')
 graphs = data_split(g, args)
+subfigs(graphs,args)
 # for graph in graphs:
 #     visualize(graph)
 # FL initialize
@@ -28,17 +30,20 @@ for _ in range(int(args.n_epochs)):
     for k in range(len(clients)):
         # Fork
         clients[k].fork(server)
-        # Local_update
-        clients[k].local_update()
         # Evaluate
         acc = evaluate(clients[k].model, clients[k], mask='test')
-        recorder['test_acc']['clients'][k].append(acc)
+        recorder['test_acc']['clients'][k+1].append(acc)
+        # Local_update
+        clients[k].local_update()
+        # # Evaluate
+        # acc = evaluate(clients[k].model, clients[k], mask='test')
+        # recorder['test_acc']['clients'][k+1].append(acc)
     # Merge
     server.merge(clients)
     acc = evaluate(server.model, server)
     recorder['test_acc']['server'].append(acc)
     acc = evaluate(server.model, new_client)
-    recorder['test_acc']['clients'][-1].append(acc)
+    recorder['test_acc']['clients'][0].append(acc)
 # Evaluate
 for k in range(len(clients)):
     acc = evaluate(clients[k].model, clients[k], mask='test')
@@ -47,5 +52,9 @@ acc = evaluate(server.model, server)
 print("Server: {:.2%}".format(acc))
 acc = evaluate(server.model, new_client)
 print("Client{}: {:.2%}".format(new_client.id, acc))
+new_client.g.remove_edges(new_client.g.edges(form='eid'))
+new_client.g = add_self_loop(new_client.g)
+acc = evaluate(server.model, new_client)
+print("Client{}: {:.2%}".format(new_client.id, acc))
 torch.save(recorder, './saves/recorder.pt')
-plotfig(recorder)
+plotfig(recorder, args)

@@ -10,7 +10,6 @@ from networkx.algorithms.community import asyn_fluidc
 
 
 def data_load(args):
-    # args.dataset = 'pubmed'
     # load and preprocess dataset
     if args.dataset == 'cora':
         data = CoraGraphDataset()
@@ -36,30 +35,32 @@ def major_connected_graph(G):
 
 
 def data_sample(g, args):
+    if args.split_method == 'b_min_cut':
+        # balance min-cut
+        labels = g.ndata['label']
+        assign = min_cut(g, args.split, balance_ntypes=labels).tolist()
+        index = [[] for i in range(args.split)]
+        [index[ind].append(i) for i, ind in enumerate(assign)]
+    elif args.split_method == 'random_choice':
+        # random_choice
+        assign = random_choice(args.split, g.number_of_nodes()).tolist()
+        index = [[] for i in range(args.split)]
+        [index[ind].append(i) for i, ind in enumerate(assign)]
+    elif args.split_method == 'ub_min_cut':
+        # unbalance min-cut
+        assign = min_cut(g, args.split).tolist()
+        index = [[] for i in range(args.split)]
+        [index[ind].append(i) for i, ind in enumerate(assign)]
+    elif args.split_method == 'community_detection':
+        # community detection
+        G = g.to_networkx().to_undirected()
+        major_connected_graph(G)
+        index = list(asyn_fluidc(G, args.split, seed=0))
+        index = [list(k) for k in index]
+    else:
+        raise ValueError('Unknown split_method: {}'.format(args.split_method))
 
     # mini_batch
-
-    # # random_choice
-    # assign = random_choice(args.split, g.number_of_nodes()).tolist()
-    # index = [[] for i in range(args.split)]
-    # [index[ind].append(i) for i, ind in enumerate(assign)]
-
-    # # balance min-cut
-    # labels = g.ndata['label']
-    # assign = min_cut(g, args.split, balance_ntypes=labels).tolist()
-    # index = [[] for i in range(args.split)]
-    # [index[ind].append(i) for i, ind in enumerate(assign)]
-
-    # unbalance min-cut
-    assign = min_cut(g, args.split).tolist()
-    index = [[] for i in range(args.split)]
-    [index[ind].append(i) for i, ind in enumerate(assign)]
-
-    # # community detection
-    # G = g.to_networkx().to_undirected()
-    # major_connected_graph(G)
-    # index = list(asyn_fluidc(G, args.split, seed=0))
-    # index = [list(k) for k in index]
 
     return index
 
