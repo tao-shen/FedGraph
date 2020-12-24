@@ -1,5 +1,8 @@
+seed: 2020
 # dataset: cora
 dataset: citeseer
 # dataset: pubmed
 E: 3
 n-epochs: 200
+# model_type: GCN
+model_type: MLP

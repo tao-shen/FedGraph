@@ -3,4 +3,8 @@ __pycache__/
 saves/
 wandb/
 test.py
-plot.ipynb
+*.ipynb
+useless.py
+*.png
+*.pdf
+community_detection.py

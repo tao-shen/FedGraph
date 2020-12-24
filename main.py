@@ -7,7 +7,7 @@ from plot import *
 
 # Initialize
 args = args()
-# setup_seed(2020)
+# setup_seed(args.seed)
 recorder = {'train_loss': {'clients': [[] for k in range(args.split)], 'server': []},
             'val_loss': {'clients': [[] for k in range(args.split)], 'server': []},
             'test_loss': {'clients': [[] for k in range(args.split)], 'server': []},
@@ -17,6 +17,8 @@ recorder = {'train_loss': {'clients': [[] for k in range(args.split)], 'server':
 # Data load & split
 g = data_load(args)
 graphs = data_split(g, args)
+# for graph in graphs:
+#     visualize(graph)
 # FL initialize
 server = Server(g, args)
 clients = [Client(k, graphs[k], args) for k in range(args.num_clients)]

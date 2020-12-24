@@ -7,17 +7,20 @@ loss_fcn = torch.nn.CrossEntropyLoss()
 
 def shuffle(*args):
     import random
-    random.seed(2020)
+    random.seed(0)
     for i in args:
         sf(i)
-    pass
 
 
 def init_model(args):
-    return GCN(args.in_feats, args.n_hidden,
-               args.num_classes, args.n_layers, args.dropout).to(args.device)
-    # return MLP(args.in_feats, args.n_hidden,
-    #            args.num_classes, args.n_layers, args.dropout).to(args.device)
+    if args.model_type == 'GCN':
+        return GCN(args.in_feats, args.n_hidden,
+                   args.num_classes, args.n_layers, args.dropout).to(args.device)
+    elif args.model_type == 'MLP':
+        return MLP(args.in_feats, args.n_hidden,
+                   args.num_classes, args.n_layers, args.dropout).to(args.device)
+    else:
+        raise ValueError('Unknown model type {}'.format(args.model_type))
 
 
 def init_optimizer(model, args):
@@ -60,37 +63,7 @@ def train(client):
     client.optimizer.step()
 
 
-def train_bak(client):
-    client.model.train()
-    logits = client.model(client.g, client.feats)
-    logits = logits[client.train_mask]
-    labels = client.labels[client.train_mask]
-    loss = loss_fcn(logits, labels)
-    client.optimizer.zero_grad()
-    loss.backward()
-    client.optimizer.step()
-
-
 def evaluate(model, target, mask='test'):
-    if mask == 'test':
-        mask = target.test_mask
-    elif mask == 'val':
-        mask = target.val_mask
-    elif mask == 'train':
-        mask = target.train_mask
-    else:
-        raise ValueError('Unknown mask {}'.format(mask))
-    model.eval()
-    with torch.no_grad():
-        logits = model(target.g, target.feats)
-        logits = logits[mask]
-        labels = target.labels[mask]
-        pred = logits.argmax(dim=1)
-        correct = torch.sum(pred == labels)
-        return correct.item() * 1.0 / len(labels)
-
-
-def evaluate_bak(model, target, mask='test'):
     if mask == 'test':
         mask = target.test_mask
     elif mask == 'val':
