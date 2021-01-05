@@ -1,3 +1,4 @@
+import dgl
 from models import *
 from utils import *
 from fl import *
@@ -7,7 +8,7 @@ from plot import *
 
 # Initialize
 args = args()
-# setup_seed(args.seed)
+setup_seed(args.seed)
 recorder = {'train_loss': {'clients': [[] for k in range(args.split)], 'server': []},
             'val_loss': {'clients': [[] for k in range(args.split)], 'server': []},
             'test_loss': {'clients': [[] for k in range(args.split)], 'server': []},
@@ -18,12 +19,14 @@ recorder = {'train_loss': {'clients': [[] for k in range(args.split)], 'server':
 g = data_load(args)
 e = g.edges(form='eid')
 graphs = data_split(g, args)
-subfigs(graphs,args)
-# for graph in graphs:
-#     visualize(graph)
+# subfigs(graphs,args)
 # FL initialize
 server = Server(g, args)
 clients = [Client(k, graphs[k], args) for k in range(args.num_clients)]
+for i in clients:
+    i.g.remove_edges(i.g.edges(form='eid'))
+    # i.g = add_self_loop(i.g)
+    add_edges(i.g)
 new_client = Client(-1, graphs[-1], args)
 # FLearning
 for _ in range(int(args.n_epochs)):
@@ -48,6 +51,10 @@ for _ in range(int(args.n_epochs)):
 for k in range(len(clients)):
     acc = evaluate(clients[k].model, clients[k], mask='test')
     print("Client{}: {:.2%}".format(clients[k].id, acc))
+acc = evaluate(server.model, server)
+print("Server: {:.2%}".format(acc))
+server.g.remove_edges(server.g.edges(form='eid'))
+server.g = add_self_loop(server.g)
 acc = evaluate(server.model, server)
 print("Server: {:.2%}".format(acc))
 acc = evaluate(server.model, new_client)

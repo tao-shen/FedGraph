@@ -1,6 +1,10 @@
 import torch
 from models import *
 from random import shuffle as sf
+from random import choices
+import numpy as np
+import copy
+from dgl.random import choice as random_choice
 
 loss_fcn = torch.nn.CrossEntropyLoss()
 
@@ -11,6 +15,26 @@ def shuffle(*args):
     for i in args:
         sf(i)
 
+
+def add_edges(g):
+    n = g.nodes().tolist()
+    # sf(n)
+    # u = copy.deepcopy(n)
+    # sf(n)
+    # v = copy.deepcopy(n)
+    labels = g.ndata['label']
+    idx = sorted(range(len(labels)), key=lambda k: labels[k])
+    l = [torch.where(labels == i)[0].tolist() for i in range(7)]
+    # u = idx[0:-1]
+    # v = idx[1:]
+    # u = choices(n, k=2000)
+    # v = choices(n, k=2000)
+    # k = [1000, 60, 40, 700, 75, 300, 75]
+    # g.add_edges(u, v)
+    for i in range(len(l)):
+        u = choices(l[i], k=len(l[i])*5)
+        v = choices(l[i], k=len(l[i])*5)
+        g.add_edges(u, v)
 
 def init_model(args):
     if args.model_type == 'GCN':

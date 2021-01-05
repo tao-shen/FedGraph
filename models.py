@@ -46,13 +46,13 @@ class GCN(nn.Module):
         self.activation = F.relu
         # input layer
         self.layers.append(
-            GraphConv(in_feats, n_hidden, activation=self.activation))
+            GraphConv(in_feats, n_hidden, activation=self.activation, allow_zero_in_degree=True))
         # hidden layers
         for i in range(n_layers - 1):
             self.layers.append(
-                GraphConv(n_hidden, n_hidden, activation=self.activation))
+                GraphConv(n_hidden, n_hidden, activation=self.activation, allow_zero_in_degree=True))
         # output layer
-        self.layers.append(GraphConv(n_hidden, num_classes))
+        self.layers.append(GraphConv(n_hidden, num_classes, allow_zero_in_degree=True))
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, g, features):

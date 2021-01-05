@@ -1,5 +1,5 @@
 import torch
-from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset
+from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset, BitcoinOTCDataset
 from dgl.partition import metis_partition_assignment as min_cut
 from dgl.random import choice as random_choice
 from dgl import node_subgraph, remove_self_loop, add_self_loop

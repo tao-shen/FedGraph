@@ -4,7 +4,7 @@ from torch._C import default_generator
 
 def fl_args(parser):
     parser.add_argument("--seed", type=int, default=2020)
-    parser.add_argument('--device', type=str, default='cuda:0',
+    parser.add_argument('--device', type=str, default='cuda:1',
                         help='device: {cuda, cpu}')
     parser.add_argument("--E", type=int, default=3,
                         help="dropout probability")
