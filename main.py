@@ -8,7 +8,7 @@ from plot import *
 import os
 
 # Initialize
-os.mkdir('saves', exists=True)
+os.mkdir('saves', exists_ok=True)
 args = args()
 setup_seed(args.seed)
 recorder = {'train_loss': {'clients': [[] for k in range(args.split)], 'server': []},
