@@ -5,8 +5,10 @@ from fl import *
 from data import *
 from args import *
 from plot import *
+import os
 
 # Initialize
+os.makedirs('saves', exist_ok=True)
 args = args()
 setup_seed(args.seed)
 recorder = {'train_loss': {'clients': [[] for k in range(args.split)], 'server': []},

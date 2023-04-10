@@ -1,0 +1,4 @@
+dgl==1.0.1
+torch==2.0.0
+matplotlib==3.7.1
+configargparse==1.5.3
